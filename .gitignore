@@ -1,0 +1,13 @@
+bin/
+.idea/
+.project
+.vscode/
+/.DS_Store
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.local
