@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -20,22 +19,16 @@ import (
 // 1. 接收客户端 request，并将 request 中带的 header 写入 response header
 func request1Handler(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("request1 handler")
-	fmt.Println("request from: ", request.RemoteAddr)
-	io.WriteString(response, "===================请求头明细:============\n")
 	headers := request.Header
 	// type Header map[string][]string
 	for header := range headers {
 		values := headers[header]
-		fmt.Println("---", reflect.TypeOf(values))
 		for i, v := range values {
 			values[i] = strings.TrimSpace(v)
 		}
-		fmt.Println("header: "+header, strings.Join(values, ","))
 		// 写入 header中
 		response.Header().Set(header, strings.Join(values, ","))
-		io.WriteString(response, fmt.Sprintf("%s=%s\n", header, strings.Join(values, ",")))
 	}
-	fmt.Fprintln(response, headers)
 	io.WriteString(response, "ok\n")
 }
 
@@ -43,6 +36,7 @@ func request1Handler(response http.ResponseWriter, request *http.Request) {
 func request2Handler(response http.ResponseWriter, request *http.Request) {
 	fmt.Println("request from: ", request.RemoteAddr)
 	verStr := os.Getenv("VERSION")
+	response.Header().Set("VERSION", verStr)
 	io.WriteString(response, fmt.Sprintf("%s=%s\n", "VERSION", verStr))
 }
 
@@ -65,6 +59,7 @@ func healthzHandler(response http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
+	os.Setenv("VERSION", "v1.0.1")
 	fmt.Println("Server started and listing Port 8090.")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/request1", request1Handler)
