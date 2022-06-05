@@ -31,6 +31,8 @@ func request1Handler(response http.ResponseWriter, request *http.Request) {
 			values[i] = strings.TrimSpace(v)
 		}
 		fmt.Println("header: "+header, strings.Join(values, ","))
+		// 写入 header中
+		response.Header().Set(header, strings.Join(values, ","))
 		io.WriteString(response, fmt.Sprintf("%s=%s\n", header, strings.Join(values, ",")))
 	}
 	fmt.Fprintln(response, headers)
