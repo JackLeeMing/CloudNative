@@ -1,9 +1,25 @@
-FROM ubuntu
-ENV MY_SERVICE_PORT=80
-ENV MY_SERVICE_PORT1=80
-ENV MY_SERVICE_PORT2=80
-ENV MY_SERVICE_PORT3=80
-LABEL multi.label1="value1" multi.label2="value2" other="value3"
-ADD bin/amd64/CloudNative /CloudNative
-EXPOSE 80
-ENTRYPOINT /CloudNative
+FROM jackleeming/cloudnative:v0-base AS builder
+
+RUN mkdir -p $GOPATH/src/github.com/CloudNative
+
+WORKDIR $GOPATH/src/github.com/CloudNative
+
+COPY . .
+
+RUN go env -w GOPROXY=https://goproxy.cn,direct \
+    && go mod download \
+    && GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags '-w -s -extldflags "-static"' -o /go/bin/CloudNative main.go
+
+WORKDIR /go/bin
+
+RUN upx CloudNative
+
+FROM alpine:3.16.0
+
+COPY --from=builder /go/bin/CloudNative /go/bin/CloudNative
+
+WORKDIR /go/bin
+
+EXPOSE 8090
+
+ENTRYPOINT ["./CloudNative"]
