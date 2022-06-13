@@ -1,6 +1,32 @@
 # CloudNative
 
-# 镜像构建
+# 第二次作业
+
+## 镜像构建
+
+- 基础镜像
+
+```Dockerfile
+FROM golang:1.17.11-alpine3.16
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    && apk update \
+    && apk add --no-cache git  \
+    && apk add --no-cache docker    \
+    && apk add --no-cache tzdata    \
+    && apk add --no-cache curl  \
+    && apk add --no-cache gettext	\
+    && apk add --no-cache cloc  \
+    && apk add --no-cache upx
+
+RUN go env -w GO111MODULE=on \
+    && go env -w CGO_ENABLED=0 \
+    && go env -w GOPROXY=https://goproxy.cn,direct
+
+ENV TZ=Asia/Shanghai
+```
+
+- 工程镜像
 
 ```Dockerfile
 FROM jackleeming/cloudnative:v1-base AS builder
@@ -32,7 +58,7 @@ EXPOSE 8090
 ENTRYPOINT ["./CloudNative"]
 ```
 
-# nsenter 操作步骤
+## nsenter 操作步骤
 
 ```shell
 echo "#1 启动容器"
