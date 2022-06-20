@@ -9,7 +9,8 @@ import (
 
 var timeOut = false
 
-func producer(threadId int, wg *sync.WaitGroup, ch chan string) {
+func producer(threadId int, wg *sync.WaitGroup, ch chan<- string) {
+	// 只能写入数据
 	count := 0
 	for !timeOut {
 		time.Sleep(1 * time.Second)
@@ -21,7 +22,8 @@ func producer(threadId int, wg *sync.WaitGroup, ch chan string) {
 	wg.Done()
 }
 
-func consumer(wg *sync.WaitGroup, ch chan string) {
+func consumer(wg *sync.WaitGroup, ch <-chan string) {
+	// 只能读取数据
 	for data := range ch {
 		time.Sleep(1 * time.Second)
 		fmt.Printf("Consumer. %s\n", data)
