@@ -148,7 +148,7 @@ func TPractice09() {
 
 }
 
-// 生产者消费者
+// TPractice10 生产者消费者
 func TPractice10() {
 	ch := make(chan int, 10)
 	done := make(chan bool)
@@ -174,4 +174,17 @@ func TPractice10() {
 	time.Sleep(1 * time.Second)
 	fmt.Println("exited.")
 
+}
+
+func TPractice11() {
+	c := make(chan int, 1)
+	for i := 0; i < 5; i++ {
+		go func(i int) {
+			fmt.Println(i)
+			c <- i
+		}(i)
+	}
+	for i := 0; i < 5; i++ {
+		<-c
+	}
 }

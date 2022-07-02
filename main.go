@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/JackLeeMing/CloudNative/practice"
+	"github.com/JackLeeMing/CloudNative/lock"
 )
 
 func init() {
@@ -11,5 +11,5 @@ func init() {
 }
 
 func main() {
-	practice.TPractice10()
+	lock.TryQueue()
 }
