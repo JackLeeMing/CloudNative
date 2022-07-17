@@ -58,8 +58,9 @@ spec:
         cloudnative/name: cloudnative
     spec:
       containers:
-      - image: jackleeming/cloudnative:v1.0.3
+      - image: jackleeming/cloudnative:v1.0.4
         imagePullPolicy: IfNotPresent
+        # 加载配置
         envFrom:
         - configMapRef:
             name: config-env
