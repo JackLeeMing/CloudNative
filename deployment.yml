@@ -1,3 +1,4 @@
+# namespace 配置
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -6,6 +7,17 @@ metadata:
     cloudnative/name: cloudnative
   name: cloudnative
 ---
+# ConfigMap 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-env
+data:
+  VERSION: v1.0.4
+  loglevel: debug
+  httpport: "8090"     
+---
+# Service 配置
 apiVersion: v1
 kind: Service
 metadata:
@@ -26,6 +38,7 @@ spec:
     cloudnative/name: cloudnative
   type: NodePort
 ---
+# 应用 配置
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -46,6 +59,10 @@ spec:
       containers:
       - image: jackleeming/cloudnative:v1.0.3
         imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: config-env
+        #  liveness 探活
         livenessProbe:
             failureThreshold: 3
             httpGet:

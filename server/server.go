@@ -59,20 +59,32 @@ func healthzHandler(response http.ResponseWriter, request *http.Request) {
 	io.WriteString(response, "ok\n")
 }
 
+func home(response http.ResponseWriter, request *http.Request) {
+	verStr := os.Getenv("VERSION")
+	logLevel := os.Getenv("loglevel")
+	httpport := os.Getenv("httpport")
+	values := []string{verStr, logLevel, httpport}
+	io.WriteString(response, strings.Join(values, ","))
+}
+
 func ExecuteServer() {
-	os.Setenv("VERSION", "v1.0.1")
-	fmt.Println("Server started and listing Port 8090.")
+	httpport := os.Getenv("httpport")
+	if httpport == "" {
+		httpport = "8090"
+	}
+	fmt.Println("Server started and listing Port " + httpport + ".")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/request1", request1Handler)
 	mux.HandleFunc("/request2", request2Handler)
 	mux.HandleFunc("/request3", request3Handler)
 	mux.HandleFunc("/healthz", healthzHandler)
+	mux.HandleFunc("/", home)
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	err := http.ListenAndServe(":8090", mux)
+	err := http.ListenAndServe(":"+httpport, mux)
 	if err != nil {
 		log.Fatal(err)
 	}
