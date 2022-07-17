@@ -20,7 +20,7 @@ spec:
     port: 8090
     protocol: TCP
     targetPort: 8090
-    nodePort: 320001
+    nodePort: 32001
   selector:
     k8s-app: cloudnative
     cloudnative/name: cloudnative
