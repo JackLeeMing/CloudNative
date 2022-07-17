@@ -12,6 +12,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-env
+  namespace: cloudnative
 data:
   VERSION: v1.0.4
   loglevel: debug
