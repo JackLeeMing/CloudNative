@@ -2,6 +2,8 @@
 
 # 第三次作业
 
+# 第一部分
+
 ## 1、 创建 namespace
 
 ```Yaml
@@ -14,31 +16,7 @@ metadata:
   name: cloudnative
 ```
 
-## 2、创建 Service 通过 nodePort 提供对外访问的端口
-
-```Yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: httpserver
-  namespace: cloudnative
-  labels:
-    k8s-app: cloudnative
-    cloudnative/name: cloudnative
-spec:
-  ports:
-  - name: httpserver
-    port: 8090
-    protocol: TCP
-    targetPort: 8090
-    nodePort: 32001
-  selector:
-    k8s-app: cloudnative
-    cloudnative/name: cloudnative
-  type: NodePort
-```
-
-## 3、创建 configmap 提供环境变量和配置等
+## 2、创建 configmap 提供环境变量和配置等
 
 ```Yaml
 apiVersion: v1
@@ -51,7 +29,7 @@ data:
   httpport: "8090"
 ```
 
-## 4、创建服务实例
+## 3、创建服务实例
 
 ```Yaml
 apiVersion: apps/v1
@@ -122,7 +100,7 @@ spec:
           path: /etc/localtime
 ```
 
-## 5、关于容器终止
+## 4、关于容器终止
 
 - 1、构建基于 tini 的 alpine 基础镜像 jackleeming/cloudnative:v1-tini
 
@@ -165,3 +143,33 @@ EXPOSE 8090
 # 程序启动采用 CMD，通过tini来启动
 CMD ["./CloudNative"]
 ```
+
+## 完整的服务 部署文件见 deployment.yml
+
+## 第二部分
+
+## 1、创建 Service 通过 nodePort 提供对外访问的端口
+
+```Yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpserver
+  namespace: cloudnative
+  labels:
+    k8s-app: cloudnative
+    cloudnative/name: cloudnative
+spec:
+  ports:
+  - name: httpserver
+    port: 8090
+    protocol: TCP
+    targetPort: 8090
+    nodePort: 32001
+  selector:
+    k8s-app: cloudnative
+    cloudnative/name: cloudnative
+  type: NodePort
+```
+
+## 完整的服务部署文件见 deployment.yml
