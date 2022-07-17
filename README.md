@@ -148,7 +148,7 @@ CMD ["./CloudNative"]
 
 ## 第二部分
 
-## 1、创建 Service 通过 nodePort 提供对外访问的端口
+## 基于 Service 通过 nodePort 提供对外访问的端口
 
 ```Yaml
 apiVersion: v1
@@ -171,5 +171,56 @@ spec:
     cloudnative/name: cloudnative
   type: NodePort
 ```
+
+## 基于 ingress-nignx
+
+- 1、ingress 部署文件见 ./ingress/deploy_1.3.0.yaml 镜像采用 registry 搭建的私有非加密仓库
+- 2、创建 证书
+
+```sh
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=cncamp.com/O=cncamp" -addext "subjectAltName = DNS:cncamp.com"
+```
+
+- 3、创建 secret
+
+```sh
+kubectl create secret tls cncamp-tls --cert=./tls.crt --key=./tls.key
+```
+
+- 4、创建 ingress
+
+```Yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: httpserver
+  namespace: cloudnative
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  tls:
+    - hosts:
+        - cncamp.com
+      secretName: cncamp-tls
+  rules:
+    - host: cncamp.com
+      http:
+        paths:
+          - path: "/"
+            pathType: Prefix
+            backend:
+              service:
+                name: httpserver
+                port:
+                  number: 8090
+```
+
+- 5 结果演示
+
+  ![](./p1.png)
+
+  ![](./p2.png)
+
+  ![](./p3.png)
 
 ## 完整的服务部署文件见 deployment.yml
