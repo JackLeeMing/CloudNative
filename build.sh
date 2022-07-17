@@ -1,1 +1,1 @@
-docker build -t jackleeming/cloudnative:v1.0.2 .
+docker build -t jackleeming/cloudnative:v1.0.3 .

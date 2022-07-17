@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    k8s-app: cloudnative
+    cloudnative/name: cloudnative
+  name: cloudnative
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpserver
+  namespace: cloudnative
+  labels:
+    k8s-app: cloudnative
+    cloudnative/name: cloudnative
+spec:
+  ports:
+  - name: httpserver
+    port: 8090
+    protocol: TCP
+    targetPort: 8090
+    nodePort: 320001
+  selector:
+    k8s-app: cloudnative
+    cloudnative/name: cloudnative
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver
+  namespace: cloudnative
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: cloudnative
+      cloudnative/name: cloudnative
+  template:
+    metadata:
+      labels:
+        k8s-app: cloudnative
+        cloudnative/name: cloudnative
+    spec:
+      containers:
+      - image: jackleeming/cloudnative:v1.0.3
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8090
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        name: httpserver
+        readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 8090
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+        ports:
+        - containerPort: 8090
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime

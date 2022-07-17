@@ -16,7 +16,7 @@ WORKDIR /go/bin
 
 RUN upx CloudNative
 
-FROM alpine:3.16.0
+FROM jackleeming/cloudnative:v1-tini
 
 COPY --from=builder /go/bin/CloudNative /go/bin/CloudNative
 
@@ -24,4 +24,4 @@ WORKDIR /go/bin
 
 EXPOSE 8090
 
-ENTRYPOINT ["./CloudNative"]
+CMD ["./CloudNative"]
