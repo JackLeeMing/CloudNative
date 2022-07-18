@@ -363,9 +363,9 @@ spec:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/name: ingress-nginx
   externalIPs:
-  - 192.168.16.4
-  - 192.168.48.5
-  - 192.168.48.6
+    - 172.16.201.6
+    - 172.16.201.7
+    - 172.16.201.8
   type: LoadBalancer
 ---
 apiVersion: v1
@@ -392,7 +392,7 @@ spec:
   type: ClusterIP
 ---
 apiVersion: apps/v1
-kind: DaemonSet #Deployment
+kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/component: controller
@@ -494,10 +494,8 @@ spec:
           name: webhook-cert
           readOnly: true
       dnsPolicy: ClusterFirst
-      # hostNetwork: false  #这里加一句
       nodeSelector:
         kubernetes.io/os: linux
-        hasIngress: "true"
       serviceAccountName: ingress-nginx
       terminationGracePeriodSeconds: 300
       volumes:
