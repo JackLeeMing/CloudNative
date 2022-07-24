@@ -1,6 +1,6 @@
 # CloudNative
 
-# 第四次作业
+# 第四次作业 Service & ingress-nignx
 
 ## 基于 Service 通过 nodePort 提供对外访问的端口
 
@@ -28,7 +28,8 @@ spec:
 
 ## 基于 ingress-nignx
 
-- 1、ingress 部署文件见 ./ingress/deploy_1.3.0.yaml 镜像采用 registry 搭建的私有非加密仓库
+- 1、ingress 部署文件见 ./ingress/deploy_1.3.0.yaml 镜像采用 registry 搭建的私有非加密仓库 【 采用 DaemonSet 启动 controller 保证高可用】
+
 - 2、创建 证书
 
 ```sh
