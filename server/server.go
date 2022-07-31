@@ -32,7 +32,7 @@ func randInt(min int, max int) int {
 
 // 1. 接收客户端 request，并将 request 中带的 header 写入 response header
 func request1Handler(response http.ResponseWriter, request *http.Request) {
-	fmt.Println("request1 handler")
+	glog.V(4).Info("request1 handler")
 	headers := request.Header
 	// type Header map[string][]string
 	for header := range headers {
@@ -48,7 +48,7 @@ func request1Handler(response http.ResponseWriter, request *http.Request) {
 
 // 2. 读取当前系统的环境变量中的 VERSION 配置，并写入 response header
 func request2Handler(response http.ResponseWriter, request *http.Request) {
-	fmt.Println("request from: ", request.RemoteAddr)
+	glog.V(4).Info("request from: ", request.RemoteAddr)
 	verStr := os.Getenv("VERSION")
 	response.Header().Set("VERSION", verStr)
 	io.WriteString(response, fmt.Sprintf("%s=%s\n", "VERSION", verStr))
@@ -56,18 +56,15 @@ func request2Handler(response http.ResponseWriter, request *http.Request) {
 
 //3. Server 端记录访问日志包括客户端 IP，HTTP 返回码，输出到 server 端的标准输出
 func request3Handler(response http.ResponseWriter, request *http.Request) {
-	fmt.Println("request from: ", request.RemoteAddr)
 	from := request.RemoteAddr
-	println("Client-> ip:port= " + from)
 	ipStr := strings.Split(from, ":")
-	println("Client-> ip= " + ipStr[0])
-	println("Server-> response code= " + strconv.Itoa(int(http.StatusOK)))
+	glog.V(4).Info("Client-> ip= " + ipStr[0])
+	glog.V(4).Info("Server-> response code= " + strconv.Itoa(int(http.StatusOK)))
 	io.WriteString(response, "ok\n")
 }
 
 // 4.当访问 localhost/healthz 时，应返回 200
-func healthzHandler(response http.ResponseWriter, request *http.Request) {
-	fmt.Println("request from: ", request.RemoteAddr)
+func healthzHandler(response http.ResponseWriter, _ *http.Request) {
 	response.WriteHeader(200) // http.StatusOK
 	io.WriteString(response, "ok\n")
 }
@@ -100,7 +97,7 @@ func ExecuteServer() {
 		httpport = "8090"
 	}
 	metrics.Register()
-	fmt.Println("Server started and listing Port " + httpport + ".")
+	glog.V(4).Info("Server started and listing Port " + httpport + ".")
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/request1", request1Handler)
