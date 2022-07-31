@@ -1,21 +1,34 @@
 package server
 
 import (
+	"context"
+	"flag"
 	"fmt"
 	"io"
-	"log"
+	"math/rand"
 	"net/http"
 	"net/http/pprof"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
+
+	"github.com/JackLeeMing/CloudNative/metrics"
+	"github.com/golang/glog"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 /**
 读锁 不互斥
 写锁 互斥
-
 */
+
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
+}
 
 // 1. 接收客户端 request，并将 request 中带的 header 写入 response header
 func request1Handler(response http.ResponseWriter, request *http.Request) {
@@ -59,33 +72,69 @@ func healthzHandler(response http.ResponseWriter, request *http.Request) {
 	io.WriteString(response, "ok\n")
 }
 
-func home(response http.ResponseWriter, request *http.Request) {
+func rootHandler(response http.ResponseWriter, _ *http.Request) {
+	glog.V(4).Info("---- 进入 rootHandler ---")
+	timer := metrics.NewTimer()
+	defer timer.ObserveTotal()
+	delay := randInt(10, 2000)
 	verStr := os.Getenv("VERSION")
 	logLevel := os.Getenv("loglevel")
 	httpport := os.Getenv("httpport")
 	values := []string{verStr, logLevel, httpport}
+
+	time.Sleep(time.Millisecond * time.Duration(delay))
 	io.WriteString(response, strings.Join(values, ","))
+	glog.V(4).Info("rootHandler 在%dms内 完成响应", delay)
 }
 
 func ExecuteServer() {
+	level := os.Getenv("level")
+	if level == "" {
+		flag.Set("v", "4")
+	} else {
+		flag.Set("v", level)
+	}
+	glog.V(2).Info("Starting http server...")
 	httpport := os.Getenv("httpport")
 	if httpport == "" {
 		httpport = "8090"
 	}
+	metrics.Register()
 	fmt.Println("Server started and listing Port " + httpport + ".")
 	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/request1", request1Handler)
 	mux.HandleFunc("/request2", request2Handler)
 	mux.HandleFunc("/request3", request3Handler)
 	mux.HandleFunc("/healthz", healthzHandler)
-	mux.HandleFunc("/", home)
+	mux.HandleFunc("/send", rootHandler)
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
-	err := http.ListenAndServe(":"+httpport, mux)
-	if err != nil {
-		log.Fatal(err)
+	srv := http.Server{
+		Addr:    ":" + httpport,
+		Handler: mux,
 	}
+	// golang 优雅终止
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			glog.Fatalf("listen: %s\n", err)
+		}
+	}()
+	glog.Infof("--- Server started ---")
+	<-done
+	glog.Infof("--- Server stopped ---")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		glog.Fatalf("Server Shutdown Failed: %+v", err)
+	}
+	glog.Info("Server Exited Properly")
 }
