@@ -69,19 +69,17 @@ func healthzHandler(response http.ResponseWriter, _ *http.Request) {
 	io.WriteString(response, "ok\n")
 }
 
-func rootHandler(response http.ResponseWriter, _ *http.Request) {
+func rootHandler(w http.ResponseWriter, r *http.Request) {
 	glog.V(4).Info("---- 进入 rootHandler ---")
 	timer := metrics.NewTimer()
 	defer timer.ObserveTotal()
 	delay := randInt(10, 2000)
-	verStr := os.Getenv("VERSION")
-	logLevel := os.Getenv("loglevel")
-	httpport := os.Getenv("httpport")
-	values := []string{verStr, logLevel, httpport}
-
 	time.Sleep(time.Millisecond * time.Duration(delay))
-	io.WriteString(response, strings.Join(values, ","))
-	glog.V(4).Info("rootHandler 在%dms内 完成响应", delay)
+	io.WriteString(w, "=================== Details of the http request header: ============\n")
+	for k, v := range r.Header {
+		io.WriteString(w, fmt.Sprintf("%s=%s\n", k, v))
+	}
+	glog.V(4).Infof("Respond in %d ms", delay)
 }
 
 func ExecuteServer() {
@@ -91,20 +89,21 @@ func ExecuteServer() {
 	} else {
 		flag.Set("v", level)
 	}
+	metrics.Register()
+
 	glog.V(2).Info("Starting http server...")
 	httpport := os.Getenv("httpport")
 	if httpport == "" {
-		httpport = "8090"
+		httpport = "80"
 	}
-	metrics.Register()
 	glog.V(4).Info("Server started and listing Port " + httpport + ".")
 	mux := http.NewServeMux()
+	mux.HandleFunc("/send", rootHandler)
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/request1", request1Handler)
 	mux.HandleFunc("/request2", request2Handler)
 	mux.HandleFunc("/request3", request3Handler)
 	mux.HandleFunc("/healthz", healthzHandler)
-	mux.HandleFunc("/send", rootHandler)
 
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
