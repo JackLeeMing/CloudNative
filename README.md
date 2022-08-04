@@ -32,10 +32,12 @@
 
 - 从 Promethus 界面中查询延时指标数据
 
+  ![](./work5/prometheus.png)
+
   ![](./work5/p-prom1.png)
 
   ![](./work5/p-prom2.png)
 
 ## 设置 grafana dashboard
 
-  ![](./work5/dash.png)
+![](./work5/dash.png)
