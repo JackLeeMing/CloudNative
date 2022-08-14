@@ -1,0 +1,283 @@
+# ConfigMap 配置
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-env-0
+  namespace: cloudnative
+data:
+  VERSION: v1.0.8-metrics
+  loglevel: debug
+  level: "4"
+  httpport: "80" 
+  service_flag: "service0"    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-env-1
+  namespace: cloudnative
+data:
+  VERSION: v1.0.8-metrics
+  loglevel: debug
+  level: "4"
+  httpport: "80" 
+  service_flag: "service1"    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-env-2
+  namespace: cloudnative
+data:
+  VERSION: v1.0.8-metrics
+  loglevel: debug
+  level: "4"
+  httpport: "80" 
+  service_flag: ""    
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: cloudnative
+  name: service0
+spec:
+  ports:
+    - name: http-service0
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    k8s-app: service0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: cloudnative
+  name: service1
+spec:
+  ports:
+    - name: http-service1
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    k8s-app: service1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+  namespace: cloudnative
+spec:
+  ports:
+    - name: http-service2
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    k8s-app: service2
+---
+# 应用 配置
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver0
+  namespace: cloudnative
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: service0
+      cloudnative/name: service0
+  template:
+    metadata:
+      labels:
+        k8s-app: service0
+        cloudnative/name: service0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+    spec:
+      containers:
+      - image: jackleeming/cloudnative:v1.0.8-metrics
+        imagePullPolicy: IfNotPresent
+        # 加载配置
+        envFrom:
+        - configMapRef:
+            name: config-env-0
+        #  liveness 探活
+        livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        name: httpserver0
+        readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+        ports:
+        - containerPort: 80
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver1
+  namespace: cloudnative
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: service1
+      cloudnative/name: service1
+  template:
+    metadata:
+      labels:
+        k8s-app: service1
+        cloudnative/name: service1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+    spec:
+      containers:
+      - image: jackleeming/cloudnative:v1.0.8-metrics
+        imagePullPolicy: IfNotPresent
+        # 加载配置
+        envFrom:
+        - configMapRef:
+            name: config-env-1
+        #  liveness 探活
+        livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        name: httpserver1
+        readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+        ports:
+        - containerPort: 80
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver2
+  namespace: cloudnative
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: service2
+      cloudnative/name: service2
+  template:
+    metadata:
+      labels:
+        k8s-app: service2
+        cloudnative/name: service2
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "80"
+    spec:
+      containers:
+      - image: jackleeming/cloudnative:v1.0.8-metrics
+        imagePullPolicy: IfNotPresent
+        # 加载配置
+        envFrom:
+        - configMapRef:
+            name: config-env-2
+        #  liveness 探活
+        livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        name: httpserver2
+        readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 500Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: localtime
+        ports:
+        - containerPort: 80
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime

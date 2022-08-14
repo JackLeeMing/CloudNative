@@ -157,7 +157,65 @@ kubectl edit  service istio-ingressgateway -n istio-system
 
 ![](./work6/grafana2.png)
 
+## open tracing 验证
+
 - 安装 jaeger 查看 tracing
+- 修改源代码逻辑 通过注入的环境变量 service_flag 来决定访问服务的根路由是调用 http://service1 http://service2 等 【jackleeming/cloudnative:v1.0.8-metrics】
+- 部署三个实例和三个 Service 验证 tracing 具体的部署配置 见 deployment_tracing.yml
+- 部署结果见下图
+  ![](./work6/dpt.png)
+
+- 配置 istio
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: service0
+spec:
+  gateways:
+    - service0
+  hosts:
+    - "istio.jaquelee.com"
+  http:
+    - match:
+        - uri:
+            exact: /service0
+      route:
+        - destination:
+            host: service0
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: service0
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - "istio.jaquelee.com"
+      port:
+        name: http-service0
+        number: 80
+        protocol: HTTP
+```
+
+- 本地发送请求 http://istio.jaquelee.com/service0
+
+```Shell
+for i in {1..100};do time curl http://istio.jaquelee.com/service0; echo; done
+```
+
+![](./work6/tracing1.png)
+
+- jaeger ui 查看 tracing 结果
+
+![](./work6/tracing2.png)
+
+![](./work6/tracing3.png)
 
 ### PS
 
