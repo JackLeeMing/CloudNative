@@ -131,3 +131,24 @@ curl --resolve cloudnative.jaquelee.com:443:10.1.239.157 https://cloudnative.jaq
 - 观察 istio-ingressgateway 日志 kc logs istio-ingressgateway-58f4c4f77f-z87h9 -n istio-system -f
 
 ![](./work6/logs.png)
+
+## ---- 公网云服务器部署提供对外访问 ----
+
+- 编辑 istio-ingressgateway 的 Service 添加 externalIPs 为各节点的 ip
+
+```Shell
+kubectl edit  service istio-ingressgateway -n istio-system
+```
+
+![](./work6/ips.png)
+
+![](./work6/ssp.png)
+
+- 通过浏览器访问 https://cloudnative.jaquelee.com/healthz 或 http://cloudnative.jaquelee.com/healthz
+  ![](./work6/op.png)
+
+### 访问打通
+
+### PS
+
+- 同时安装了 nginx-ingress 和 istio 时 为了互不影响 nginx-ingress 的 externalIPs 和 istio-ingressgateway 的 externalIPs 错开两者代理的域名才能正常访问，这个正常吗？
