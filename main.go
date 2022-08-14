@@ -8,5 +8,5 @@ func main() {
 	// 多生产者和多消费者
 	// mpc.MPCExecute()
 	// HTTP 服务
-	server.ExecuteServer()
+	server.TracingServer()
 }

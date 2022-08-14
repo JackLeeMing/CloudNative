@@ -47,7 +47,7 @@ spec:
         - port: 80
       route:
         - destination:
-            host:  httpserver.cloudnative.svc.cluster.local
+            host: httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---
@@ -97,7 +97,7 @@ spec:
         - port: 443
       route:
         - destination:
-            host:  httpserver.cloudnative.svc.cluster.local
+            host: httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---
@@ -110,15 +110,15 @@ spec:
   selector:
     istio: ingressgateway
   servers:
-  - hosts:
-    - cloudnative.jaquelee.com
-    port:
-      name: https-default
-      number: 443
-      protocol: HTTPS
-    tls:
-      credentialName: cloudnative-other-tls
-      mode: SIMPLE
+    - hosts:
+        - cloudnative.jaquelee.com
+      port:
+        name: https-default
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: cloudnative-other-tls
+        mode: SIMPLE
 ```
 
 ### 结果验证
@@ -153,9 +153,11 @@ kubectl edit  service istio-ingressgateway -n istio-system
 
 #### 访问打通 在 grafana 中可以观察到 对应的 service【httpserver.cloudnative.svc.cluster.local】 的监控数据
 
- ![](./work6/grafana.png)
+![](./work6/grafana.png)
 
- ![](./work6/grafana2.png)
+![](./work6/grafana2.png)
+
+- 安装 jaeger 查看 tracing
 
 ### PS
 

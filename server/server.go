@@ -82,6 +82,46 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	glog.V(4).Infof("Respond in %d ms", delay)
 }
 
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	delay := randInt(10, 20)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+	serviceFlag := os.Getenv("service_flag")
+	urlPath := ""
+	if serviceFlag == "service0" {
+		urlPath = "service1"
+	} else if serviceFlag == "service1" {
+		urlPath = "service2"
+	}
+	if urlPath == "service1" || urlPath == "service2" {
+		req, err := http.NewRequest("GET", "http://"+urlPath, nil)
+		if err != nil {
+			fmt.Printf("%s", err)
+		}
+		lowerCaseHeader := make(http.Header)
+		for key, value := range r.Header {
+			lowerCaseHeader[strings.ToLower(key)] = value
+		}
+		glog.Info("headers:", lowerCaseHeader)
+		req.Header = lowerCaseHeader
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			glog.Info("HTTP get failed with error: ", "error", err)
+		} else {
+			glog.Info("HTTP get succeeded")
+		}
+		if resp != nil {
+			resp.Write(w)
+		}
+	} else {
+		io.WriteString(w, "===================Details of the http request header:============\n")
+		for k, v := range r.Header {
+			io.WriteString(w, fmt.Sprintf("%s=%s\n", k, v))
+		}
+	}
+	glog.V(4).Infof("Respond in %d ms", delay)
+}
+
 func ExecuteServer() {
 	level := os.Getenv("level")
 	if level == "" {
@@ -109,6 +149,55 @@ func ExecuteServer() {
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	mux.HandleFunc("/", healthzHandler)
+	srv := http.Server{
+		Addr:    ":" + httpport,
+		Handler: mux,
+	}
+	// golang 优雅终止
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			glog.Fatalf("listen: %s\n", err)
+		}
+	}()
+	glog.Infof("--- Server started ---")
+	<-done
+	glog.Infof("--- Server stopped ---")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		glog.Fatalf("Server Shutdown Failed: %+v", err)
+	}
+	glog.Info("Server Exited Properly")
+}
+
+func TracingServer() {
+	level := os.Getenv("level")
+	if level == "" {
+		flag.Set("v", "4")
+	} else {
+		flag.Set("v", level)
+	}
+	metrics.Register()
+
+	glog.V(2).Info("Starting http server...")
+	httpport := os.Getenv("httpport")
+	if httpport == "" {
+		httpport = "80"
+	}
+	serviceFlag := os.Getenv("service_flag")
+	glog.Infof("the service_flag is: " + serviceFlag)
+	glog.V(4).Info("Server started and listing Port " + httpport + ".")
+	mux := http.NewServeMux()
+	mux.HandleFunc("/send", rootHandler)
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/healthz", healthzHandler)
+	mux.HandleFunc("/", homeHandler)
 	srv := http.Server{
 		Addr:    ":" + httpport,
 		Handler: mux,
