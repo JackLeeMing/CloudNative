@@ -25,7 +25,7 @@ istioctl install --set profile=demo -y
 
   ![](./work6/svc.png)
 
-- 查看 istio-system 的 service
+- 查看 istio-system 的 service 确认 istio-ingressgateway 的 service ip 为 【10.1.239.157】
 
   ![](./work6/istio-svc.png)
 
