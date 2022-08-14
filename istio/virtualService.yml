@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpsserver
+spec:
+  gateways:
+    - httpsserver
+  hosts:
+    - cloudnative.jaquelee.com
+    - match:
+        - port: 80
+      route:
+        - destination:
+            host: httpserver.cloudnative.svc.cluster.local
+            port:
+              number: 80

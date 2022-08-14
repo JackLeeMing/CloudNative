@@ -1,43 +1,133 @@
 # CloudNative
 
-# 第五次作业 Loki & grafana & prometheus
+# 第六次作业 istio
 
-## 部署准备
+- 安装 istio
 
-- 部署 Loki & grafana & prometheus
-  ![](./work5/p0.png)
+```sh
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-1.14.3
+cp bin/istioctl /usr/local/bin
+istioctl install --set profile=demo -y
+```
 
-- 在 服务中加响应的代码逻辑 同时完善服务终止的相关配置
+安装过程中出现镜像加载失败问题时 先在本地【走代理】把镜像拉取下来之后推到私有仓库，之后到 pod 运行的节点将私有仓库的镜像拉取下来，edit 对应的 pod 修改镜像 tag 可以加速部署速度，同时发现只要从自己的私有镜像仓库拉取镜像成功对应的原来的镜像 tag 也会存在。
 
-- 构建新版本的镜像 版本号为：v1.0.7-metrics 直接执行 build.sh 完成构建和提交
+- 给 http 服务所在的 namespace 打上标签 istio-injection=enabled 查看效果 kc get ns -L istio-injection
 
-- 通过 jenkins 的 pipline 来实现将项目部署到服务器上，jenkins 部署配置见
-  [cloudnative-deploy](http://gitlab.jaquelee.com/jaquelee/cloudnative-deploy)
+  ![](./work6/p1.png)
 
-  ![](./work5/p1.png)
+- 删除 cloudnative 中原先运行的 pod 新 pod 会立即重建 同时运行的容器数目由 1 变为了 2
 
-- 查看部署情况
+  ![](./work6/p2.png)
 
-  ![](./work5/p2.png)
+- 查看 cloudnative 的 service
 
-  服务启动成功可以访问
+  ![](./work6/svc.png)
 
-  ![](./work5/p3.png)
+- 查看 istio-system 的 service
 
-## 验证 loki
+  ![](./work6/istio-svc.png)
 
-- 验证 loki 日志收集
+- 在 cloudnative 部署 gateway && virtualservice【http】
 
-  ![](./work5/p-loki.png)
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpsserver2
+  namespace: cloudnative
+spec:
+  hosts:
+    - cloudnative.jaquelee.com
+  gateways:
+    - httpsserver2
+  http:
+    - route:
+        - destination:
+            host: httpserver.cloudnative.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: httpsserver2
+  namespace: cloudnative
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - cloudnative.jaquelee.com
+      port:
+        number: 80
+        name: http
+        protocol: HTTP
+```
 
-- 从 Promethus 界面中查询延时指标数据
+### 结果验证
 
-  ![](./work5/prometheus.png)
+执行
 
-  ![](./work5/p-prom1.png)
+```Shell
+curl -H "Host: cloudnative.jaquelee.com" 10.1.239.157/healthz
+```
 
-  ![](./work5/p-prom2.png)
+得到如下结果
+![](./work6/http-istio.png)
 
-## 设置 grafana dashboard
+- 在 cloudnative 部署 gateway && virtualservice【https】
 
-![](./work5/dash.png)
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpserver1
+  namespace: cloudnative
+spec:
+  hosts:
+    - cloudnative.jaquelee.com
+  gateways:
+    - httpserver1-gw
+  http:
+    - route:
+        - destination:
+            host: httpserver.cloudnative.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: httpserver1-gw
+  namespace: cloudnative
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - hosts:
+        - cloudnative.jaquelee.com
+      port:
+        name: https-default
+        number: 443
+        protocol: HTTPS
+      tls:
+        credentialName: cloudnative-other-tls
+        mode: SIMPLE
+```
+
+### 结果验证
+
+执行
+
+```Shell
+curl --resolve cloudnative.jaquelee.com:443:10.1.239.157 https://cloudnative.jaquelee.com/healthz -k
+```
+
+得到如下结果
+![](./work6/https-istio.png)
+
+- 观察 istio-ingressgateway 日志 kc logs istio-ingressgateway-58f4c4f77f-z87h9 -n istio-system -f
+
+![](./work6/logs.png)

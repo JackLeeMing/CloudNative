@@ -1,0 +1,35 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpserver1
+  namespace: cloudnative
+spec:
+  hosts:
+    - cloudnative.jaquelee.com
+  gateways:
+    - httpserver1-gw
+  http:
+    - route:
+        - destination:
+            host: httpserver.cloudnative.svc.cluster.local
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: httpserver1-gw
+  namespace: cloudnative
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - cloudnative.jaquelee.com
+    port:
+      name: https-default
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: cloudnative-other-tls
+      mode: SIMPLE
