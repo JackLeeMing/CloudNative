@@ -147,7 +147,9 @@ kubectl edit  service istio-ingressgateway -n istio-system
 - 通过浏览器访问 https://cloudnative.jaquelee.com/healthz 或 http://cloudnative.jaquelee.com/healthz
   ![](./work6/op.png)
 
-### 访问打通
+#### 访问打通 在 grafana 中可以观察到 对应的 service【httpserver.cloudnative.svc.cluster.local】 的监控数据
+
+![](./work6/grafana.png)
 
 ### PS
 
