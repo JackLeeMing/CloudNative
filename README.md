@@ -149,7 +149,9 @@ kubectl edit  service istio-ingressgateway -n istio-system
 
 #### 访问打通 在 grafana 中可以观察到 对应的 service【httpserver.cloudnative.svc.cluster.local】 的监控数据
 
-![](./work6/grafana.png)
+ ![](./work6/grafana.png)
+
+ ![](./work6/grafana2.png)
 
 ### PS
 
