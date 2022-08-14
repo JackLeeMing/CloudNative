@@ -7,10 +7,11 @@ spec:
     - httpsserver
   hosts:
     - cloudnative.jaquelee.com
+  http:
     - match:
         - port: 80
       route:
         - destination:
-            host: httpserver.cloudnative.svc.cluster.local
+            host:  httpserver.cloudnative.svc.cluster.local
             port:
               number: 80

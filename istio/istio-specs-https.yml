@@ -9,9 +9,11 @@ spec:
   gateways:
     - httpserver1-gw
   http:
-    - route:
+    - match:
+        - port: 443
+      route:
         - destination:
-            host: httpserver.cloudnative.svc.cluster.local
+            host:  httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---

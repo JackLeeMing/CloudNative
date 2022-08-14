@@ -9,9 +9,11 @@ spec:
   gateways:
     - httpsserver2
   http:
-    - route:
+    - match:
+        - port: 80
+      route:
         - destination:
-            host: httpserver.cloudnative.svc.cluster.local
+            host:  httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---

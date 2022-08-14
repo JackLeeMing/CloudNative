@@ -43,9 +43,11 @@ spec:
   gateways:
     - httpsserver2
   http:
-    - route:
+    - match:
+        - port: 80
+      route:
         - destination:
-            host: httpserver.cloudnative.svc.cluster.local
+            host:  httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---
@@ -77,7 +79,7 @@ curl -H "Host: cloudnative.jaquelee.com" 10.1.239.157/healthz
 得到如下结果
 ![](./work6/http-istio.png)
 
-- 在 cloudnative 部署 gateway && virtualservice【https】
+- 在 cloudnative 部署 gateway && virtualservice【https】【cloudnative-other-tls 】
 
 ```yaml
 apiVersion: networking.istio.io/v1beta1
@@ -91,9 +93,11 @@ spec:
   gateways:
     - httpserver1-gw
   http:
-    - route:
+    - match:
+        - port: 443
+      route:
         - destination:
-            host: httpserver.cloudnative.svc.cluster.local
+            host:  httpserver.cloudnative.svc.cluster.local
             port:
               number: 80
 ---
@@ -106,15 +110,15 @@ spec:
   selector:
     istio: ingressgateway
   servers:
-    - hosts:
-        - cloudnative.jaquelee.com
-      port:
-        name: https-default
-        number: 443
-        protocol: HTTPS
-      tls:
-        credentialName: cloudnative-other-tls
-        mode: SIMPLE
+  - hosts:
+    - cloudnative.jaquelee.com
+    port:
+      name: https-default
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: cloudnative-other-tls
+      mode: SIMPLE
 ```
 
 ### 结果验证
