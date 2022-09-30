@@ -18,6 +18,7 @@ import (
 	"github.com/JackLeeMing/CloudNative/metrics"
 	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/klog/v2"
 )
 
 /**
@@ -54,7 +55,7 @@ func request2Handler(response http.ResponseWriter, request *http.Request) {
 	io.WriteString(response, fmt.Sprintf("%s=%s\n", "VERSION", verStr))
 }
 
-//3. Server 端记录访问日志包括客户端 IP，HTTP 返回码，输出到 server 端的标准输出
+// 3. Server 端记录访问日志包括客户端 IP，HTTP 返回码，输出到 server 端的标准输出
 func request3Handler(response http.ResponseWriter, request *http.Request) {
 	from := request.RemoteAddr
 	ipStr := strings.Split(from, ":")
@@ -107,6 +108,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		resp, err := client.Do(req)
 		if err != nil {
 			glog.Info("HTTP get failed with error: ", "error", err)
+			klog.Errorf("Failed to shutdown test server clearly: %v", err)
 		} else {
 			glog.Info("HTTP get succeeded")
 		}
